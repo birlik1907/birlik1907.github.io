@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Kampanya · Mesajı Kopyala &amp; Gönder</title>
+  <style>
+    :root {
+      --bg: #f2f2f4; --card: #ffffff; --field: #f6f6f7; --border: #e7e7ea; --line: #eeeef1;
+      --text: #18181b; --muted: #71717a; --faint: #a6a6ad;
+      --primary: #18181b; --on-primary: #ffffff;
+      --ring: rgba(24,24,27,0.13); --ok: #12805c;
+      --shadow: 0 1px 2px rgba(24,24,27,.05), 0 6px 18px -12px rgba(24,24,27,.22);
+      --shadow-cta: 0 8px 20px -8px rgba(24,24,27,.45);
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --r: 14px; --r-sm: 10px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0a0a0c; --card: #16161a; --field: #1c1c20; --border: #2a2a30; --line: #242429;
+        --text: #fafafa; --muted: #a1a1aa; --faint: #6f6f78;
+        --primary: #fafafa; --on-primary: #0a0a0c;
+        --ring: rgba(250,250,250,0.18); --ok: #35c78a;
+        --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 22px -14px rgba(0,0,0,.8);
+        --shadow-cta: 0 8px 22px -8px rgba(0,0,0,.9);
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.4; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow: hidden;
+    }
+    .app {
+      display: flex; flex-direction: column; height: 100vh; height: 100dvh;
+      max-width: 720px; margin: 0 auto;
+      padding: clamp(11px,1.8vw,16px) clamp(12px,2.2vw,20px) clamp(9px,1.4vw,13px);
+      gap: clamp(8px,1.2vw,11px);
+    }
+
+    /* ---- Sekme satırı (üst) ---- */
+    .tabrow { display: flex; align-items: center; gap: 10px; flex: none; }
+    [data-ph]:empty::before { content: attr(data-ph); color: var(--faint); font-weight: 400; }
+    .chip {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 33px; min-width: 33px; padding: 0 12px;
+      border: 1px solid var(--border); border-radius: 999px; background: var(--card);
+      color: var(--muted); font-size: 0.79rem; font-weight: 650; cursor: pointer; white-space: nowrap;
+      transition: color .15s, border-color .15s, background .15s; -webkit-tap-highlight-color: transparent;
+    }
+    .chip:hover { color: var(--text); border-color: var(--faint); }
+    .chip:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+    .chip.on { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+    .chip svg { width: 15px; height: 15px; }
+
+    /* ---- Sekme rozetleri ---- */
+    .tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; flex: 1 1 auto; min-width: 0; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: none; border: 1px solid var(--border); background: var(--card); color: var(--muted);
+      border-radius: 9px; height: 33px; min-width: 40px; padding: 0 12px;
+      font-family: var(--mono); font-size: 0.84rem; font-weight: 700; cursor: pointer;
+      transition: all .14s; -webkit-tap-highlight-color: transparent;
+    }
+    .tab:hover { color: var(--text); border-color: var(--faint); }
+    .tab.active { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+
+    /* ---- Ayrı beyaz kutular ---- */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); padding: clamp(10px,1.4vw,14px) clamp(13px,1.8vw,17px); flex: none; }
+    .card-grow { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+    .lbl { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .lbl em { font-style: normal; color: var(--faint); font-weight: 700; }
+
+    /* İkon kopyala (subject/body/kime hepsi aynı) */
+    .mini {
+      display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex: none;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--muted);
+      cursor: pointer; transition: color .14s, border-color .14s, background .14s; -webkit-tap-highlight-color: transparent;
+    }
+    .mini:hover { color: var(--text); border-color: var(--faint); }
+    .mini:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+    .mini svg { width: 15px; height: 15px; }
+    .mini .ic-check { display: none; }
+    .mini.done { color: #fff; background: var(--ok); border-color: var(--ok); }
+    .mini.done .ic-copy { display: none; }
+    .mini.done .ic-check { display: block; }
+
+    /* Kime */
+    .to { font-family: var(--mono); font-size: clamp(0.66rem,0.95vw,0.78rem); line-height: 1.7; margin: 0; color: var(--text); }
+    .to .addr { white-space: nowrap; }
+    .to .sep { color: var(--faint); }
+
+    /* Konu */
+    .subject { font-size: clamp(0.82rem,1.1vw,0.96rem); font-weight: 600; line-height: 1.35; margin: 0; color: var(--text); }
+
+    /* İçerik */
+    .body {
+      flex: 1 1 0; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      font-family: var(--serif); font-size: clamp(0.92rem,1.1vw,1.04rem); line-height: 1.6;
+      white-space: pre-wrap; word-wrap: break-word; color: var(--text);
+    }
+    .body::-webkit-scrollbar { width: 9px; }
+    .body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; border: 2px solid var(--card); }
+    .counter { flex: none; margin: 8px 0 0; font-size: 0.7rem; color: var(--muted); }
+    .counter[hidden] { display: none; }
+
+    .foot { flex: none; text-align: center; color: var(--faint); font-size: 0.69rem; line-height: 1.4; margin: 0; }
+
+    /* ---- Editör ---- */
+    .editor { position: fixed; inset: 0; z-index: 40; background: var(--bg); overflow-y: auto; padding: 20px clamp(14px,3vw,26px) 44px; }
+    .editor[hidden] { display: none; }
+    .editor-inner { max-width: 760px; margin: 0 auto; }
+    .editor-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+    .editor-head h2 { font-size: 1.1rem; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+    .editor-hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 18px; }
+    .field { margin-bottom: 12px; }
+    .field > label { display: block; font-size: 0.63rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--faint); margin-bottom: 6px; }
+    .field input, .field textarea { width: 100%; background: var(--field); color: var(--text); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 11px 13px; font-size: 0.95rem; font-family: inherit; resize: vertical; }
+    .field textarea { min-height: 120px; line-height: 1.6; }
+    .field input:focus, .field textarea:focus { outline: none; border-color: var(--faint); box-shadow: 0 0 0 3px var(--ring); }
+    .veditor { border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 12px; background: var(--card); }
+    .veditor-head { display: flex; gap: 8px; margin-bottom: 10px; }
+    .v-label { flex: 1; font-weight: 700; font-family: var(--mono); }
+    .v-remove { flex: none; width: 42px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--field); color: var(--muted); font-size: 1.05rem; cursor: pointer; }
+    .v-remove:hover { color: #fff; background: #dc2626; border-color: #dc2626; }
+    .veditor .field { margin-bottom: 10px; }
+    .variants-label { font-size: 0.63rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--faint); margin: 22px 0 10px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--field); color: var(--text); font-size: 0.92rem; font-weight: 650; padding: 11px 16px; cursor: pointer; transition: border-color .15s, opacity .15s; }
+    .btn:hover { border-color: var(--faint); }
+    .btn svg { width: 16px; height: 16px; }
+    .btn.solid { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+    .btn.solid:hover { opacity: 0.92; }
+    .btn-add { width: 100%; border-style: dashed; color: var(--muted); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); position: sticky; bottom: 0; background: var(--bg); }
+    .toolbar-note { flex-basis: 100%; color: var(--faint); font-size: 0.76rem; margin: 3px 0 0; }
+
+    .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(18px); background: var(--primary); color: var(--on-primary); font-size: 0.85rem; font-weight: 600; padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 60; box-shadow: var(--shadow); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="tabrow">
+      <div class="tabs" id="tabs" role="tablist" aria-label="Metinler"></div>
+      <button class="chip" id="langToggle" type="button" title="Dili değiştir">🇹🇷 TR</button>
+    </div>
+
+    <!-- KİME (en üstte) -->
+    <section class="card">
+      <div class="card-head">
+        <span class="lbl">Kime <em>(Mail To)</em></span>
+        <button class="mini" id="copyMail" type="button" aria-label="Adresleri kopyala" title="3 adresi birden kopyala">
+          <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+      <p class="to" id="recipient" data-ph="ornek@adres.org"></p>
+    </section>
+
+    <!-- KONU -->
+    <section class="card">
+      <div class="card-head">
+        <span class="lbl">Konu <em>(Subject)</em></span>
+        <button class="mini" id="copySubject" type="button" aria-label="Konuyu kopyala" title="Konuyu kopyala">
+          <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+      <p class="subject" id="subject" data-ph="E-posta konusu burada görünür"></p>
+    </section>
+
+    <!-- İÇERİK -->
+    <section class="card card-grow">
+      <div class="card-head">
+        <span class="lbl">İçerik <em>(Mail Body)</em></span>
+        <button class="mini" id="copyBody" type="button" aria-label="Metni kopyala" title="Metni kopyala">
+          <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+      <div class="body" id="body" data-ph="Mesaj metni burada görünür…"></div>
+      <p class="counter" id="counter" hidden></p>
+    </section>
+
+    <p class="foot" id="foot">🔒 Çerez yok · izleme yok · veri toplanmaz<br>Mesajı kopyala, kendi e-postandan gönder.</p>
+  </div>
+
+  <!-- ==================== EDİTÖR ==================== -->
+  <section class="editor" id="editor" hidden aria-label="İçerik düzenleme">
+    <div class="editor-inner">
+      <div class="editor-head">
+        <h2>İçeriği düzenle</h2>
+        <button class="btn" id="closeEditor" type="button">Kapat</button>
+      </div>
+      <p class="editor-hint">Üst metni, adresleri ve içerikleri gir. Her içerik bir sekme (#1, #2…) olur — konu + İngilizce + Türkçe. Bitince <b>Kaydet</b> → <b>Dosyayı indir</b>.</p>
+
+      <div class="field">
+        <label for="inRecipients">Kime — e-posta adres(ler)i (virgülle ayır; hepsi birlikte kopyalanır)</label>
+        <input id="inRecipients" type="text" placeholder="a@site.com, b@site.com, c@site.com" />
+      </div>
+      <div class="field">
+        <label for="inTitle">Tarayıcı sekmesi başlığı (görünmez)</label>
+        <input id="inTitle" type="text" placeholder="Kampanya" />
+      </div>
+
+      <p class="variants-label">İçerikler (sekmeler)</p>
+      <div id="variantList"></div>
+      <button class="btn btn-add" id="addVariantBtn" type="button">＋ İçerik (sekme) ekle</button>
+
+      <div class="toolbar">
+        <button class="btn solid" id="saveBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          Kaydet
+        </button>
+        <button class="btn" id="downloadBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+          Dosyayı indir (yayın için)
+        </button>
+        <p class="toolbar-note">“Dosyayı indir” bilgisayarına <b>index.html</b> kaydeder; içerik dosyaya gömülür. O dosyayı public bir yere yükleyerek yayınlarsın.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="campaign-data">{"title":"UEFA Kampanya","subtitle":"Bir metin seç, gönder.","recipients":["integrity@example.com","disciplinary@example.com","media@example.com"],"variants":[{"label":"#1","subjEn":"UEFA Must Act — Galatasaray Vice-Chairman Named in Turkish Match-Fixing & Illegal Betting Investigation","subjTr":"UEFA Göreve — Galatasaray Başkan Vekili, Türkiye'deki Şike ve Yasa Dışı Bahis Soruşturmasında","en":"Dear UEFA Integrity and Disciplinary Unit,\n\nI am writing to urge UEFA to intervene in a matter that Turkish football's own institutions have so far left unaddressed.\n\nOn 17 July 2026, the Istanbul Chief Public Prosecutor's Office ordered a simultaneous operation against 19 professional-club officials for illegal betting and match-fixing (bahis şikesi) under Law No. 6222; 17 were detained and 2 are abroad.¹ ²\n\nAmong the named suspects is Maruf Güneş, Deputy Chairman of Galatasaray.² During his tenure he is alleged to have placed 48 betting coupons on his own club's matches, favouring the opposing side or wagering on goal outcomes.¹ ²\n\nDespite the gravity of a sitting vice-chairman betting against his own club, no sporting measure has been taken against Galatasaray, and the club continues in UEFA competition. Domestic bodies are not intervening. UEFA must.\n\nI call on UEFA to open its own integrity review of Galatasaray under the UEFA Disciplinary Regulations, to request the case file from the Turkish authorities, and to consider provisional measures. This is UEFA's duty to the integrity of European football.\n\nRespectfully,\n[Your name]\n\nSources\n1. Türkiye Today: https://www.turkiyetoday.com/sports/turkiye-detains-galatasaray-deputy-chairman-senior-besiktas-officials-over-betting-al-3224071\n2. Daily Sabah: https://www.dailysabah.com/sports/football/turkish-authorities-detain-17-football-club-officials-in-betting-probe","tr":"Sayın UEFA Bütünlük ve Disiplin Birimi,\n\nTürk futbolunun kendi kurumlarının şu ana dek harekete geçmediği bir konuda UEFA'yı göreve çağırmak için yazıyorum.\n\n17 Temmuz 2026'da İstanbul Cumhuriyet Başsavcılığı, yasa dışı bahis ve bahis şikesi (6222 sayılı Kanun) kapsamında profesyonel liglerdeki 19 kulüp yöneticisine eş zamanlı operasyon kararı verdi; 17 kişi gözaltına alındı, 2 kişi yurt dışında.¹ ²\n\nŞüpheliler arasında Galatasaray Başkan Vekili Maruf Güneş de bulunuyor.² Yöneticiliği döneminde, kendi kulübünün maçlarında rakip lehine ya da gol bahisleri şeklinde 48 bahis kuponu oynadığı iddia ediliyor.¹ ²\n\nGörevdeki bir başkan vekilinin kendi kulübü aleyhine bahis oynamasının ağırlığına rağmen, Galatasaray'a yönelik hiçbir sportif tedbir alınmadı ve kulüp UEFA organizasyonlarında yer almaya devam ediyor. Yerel merciler müdahale etmiyor. UEFA etmeli.\n\nUEFA'yı, UEFA Disiplin Talimatı çerçevesinde Galatasaray hakkında kendi bütünlük incelemesini başlatmaya, dosyayı Türk makamlarından talep etmeye ve geçici tedbirleri değerlendirmeye çağırıyorum. Bu, UEFA'nın Avrupa futbolunun bütünlüğüne karşı görevidir.\n\nSaygılarımla,\n[Adınız]\n\nKaynaklar\n1. Türkiye Today: https://www.turkiyetoday.com/sports/turkiye-detains-galatasaray-deputy-chairman-senior-besiktas-officials-over-betting-al-3224071\n2. Daily Sabah: https://www.dailysabah.com/sports/football/turkish-authorities-detain-17-football-club-officials-in-betting-probe"},{"label":"#2","subjEn":"Integrity Alert — Galatasaray Executive in Turkey's Match-Fixing Probe; UEFA Intervention Requested","subjTr":"Bütünlük Uyarısı — Galatasaraylı Yönetici Türkiye'nin Şike Soruşturmasında; UEFA Müdahalesi Talebi","en":"Dear UEFA Integrity Unit,\n\nTurkey's own Minister of Justice has publicly confirmed this scandal, yet the implicated club plays on in Europe. I ask UEFA to step in.\n\nOn 17 July 2026, Minister of Justice Akın Gürlek announced that \"important findings regarding betting activities by some club executives in the Turkish Football Federation's professional leagues\" had been obtained, and that a simultaneous operation against 19 suspects, centred in Istanbul, was carried out — on charges of illegal betting and match-fixing.¹\n\nThe operation names Maruf Güneş, Vice-President of Galatasaray Sportif A.Ş., who allegedly placed 48 coupons on his own club's matches in favour of opponents or on goal outcomes.² Galatasaray has publicly confirmed his role.²\n\nThe state prosecutes; the federation punished referees and players in earlier phases — but Galatasaray, whose vice-president is now named, faces no sporting consequence and remains in UEFA competition. Where domestic sport is not intervening against this club, UEFA must.\n\nI formally request that UEFA open a disciplinary/integrity review of Galatasaray, obtain the case file, and act to protect the competitions it governs.\n\nRespectfully,\n[Your name]\n\nSources\n1. Habertürk — Minister of Justice Akın Gürlek's statement, 17 July 2026: https://www.haberturk.com/spor/bakan-gurlek-duyurdu-futbolda-yasa-disi-bahis-ve-bahis-sikesine-yonelik-19-supheliye-operasyon-3899086\n2. Türkiye Gazetesi — Galatasaray's statement on Maruf Güneş: https://www.turkiyegazetesi.com.tr/spor/bahis-operasyonunda-gozaltina-alinan-maruf-gunes-icin-galatasaraydan-ilk-aciklama-1803894","tr":"Sayın UEFA Bütünlük Birimi,\n\nTürkiye'nin Adalet Bakanı bu skandalı resmen doğruladı; buna rağmen adı geçen kulüp Avrupa'da oynamaya devam ediyor. UEFA'yı göreve çağırıyorum.\n\n17 Temmuz 2026'da Adalet Bakanı Akın Gürlek, \"Türkiye Futbol Federasyonu profesyonel liglerinde bazı kulüp yöneticilerinin bahis faaliyetlerine ilişkin önemli bulgulara\" ulaşıldığını ve İstanbul merkezli olarak 19 şüpheliye eş zamanlı operasyon yapıldığını — yasa dışı bahis ve bahis şikesi suçlamalarıyla — açıkladı.¹\n\nOperasyonda Galatasaray Sportif A.Ş. Başkan Vekili Maruf Güneş de yer alıyor; kendi kulübünün maçlarında rakip lehine ya da gol bahisleri şeklinde 48 kupon oynadığı iddia ediliyor.² Galatasaray, onun görevini kamuoyu önünde teyit etti.²\n\nDevlet soruşturuyor; federasyon önceki aşamalarda hakemleri ve futbolcuları cezalandırdı — ama başkan vekilinin adı geçen Galatasaray hiçbir sportif yaptırımla karşılaşmıyor ve UEFA organizasyonlarında kalıyor. Yerel spor otoriteleri bu kulübe müdahale etmiyorsa, UEFA etmelidir.\n\nUEFA'dan, Galatasaray hakkında disiplin/bütünlük incelemesi başlatmasını, dosyayı temin etmesini ve yönettiği müsabakaları korumak için harekete geçmesini resmen talep ediyorum.\n\nSaygılarımla,\n[Adınız]\n\nKaynaklar\n1. Habertürk — Adalet Bakanı Akın Gürlek açıklaması, 17 Temmuz 2026: https://www.haberturk.com/spor/bakan-gurlek-duyurdu-futbolda-yasa-disi-bahis-ve-bahis-sikesine-yonelik-19-supheliye-operasyon-3899086\n2. Türkiye Gazetesi — Galatasaray'ın Maruf Güneş açıklaması: https://www.turkiyegazetesi.com.tr/spor/bahis-operasyonunda-gozaltina-alinan-maruf-gunes-icin-galatasaraydan-ilk-aciklama-1803894"},{"label":"#3","subjEn":"Enforce the Rules — Galatasaray Vice-Chairman in Match-Fixing Case; UEFA Called to Act","subjTr":"Kuralları Uygula — Galatasaray Başkan Vekili Şike Dosyasında; UEFA Göreve Çağrılıyor","en":"Dear UEFA Disciplinary Services,\n\nThe evidence is public, the rules are clear, and the domestic response toward Galatasaray is silence. I am calling on UEFA to do its duty.\n\nOn 17 July 2026 the Istanbul Chief Public Prosecutor's Office launched a coordinated operation against 19 club officials, based on licensed betting-operator records (2020–2026) and MASAK financial-crimes analysis, for illegal betting and match-fixing.¹ Named among them is Maruf Güneş, Deputy Chairman of Galatasaray, alleged to have staked 48 coupons against his own club or on its goal outcomes.¹\n\nTurkey's own football rules leave no ambiguity: under the TFF Football Disciplinary Instruction, betting (Art. 57) carries three months to a lifetime ban, and match-fixing (Art. 58) carries a lifetime ban for individuals and relegation with point deductions for clubs.² Yet no such measure has been applied to Galatasaray, which continues in UEFA competition.\n\nIf these rules are not being enforced at home against Galatasaray, then UEFA — as guardian of European football's integrity — must enforce its own. I urge UEFA to open a formal review of the club, secure the case file, and impose provisional measures pending the outcome.\n\nRespectfully,\n[Your name]\n\nSources\n1. Karar: https://www.karar.com/spor-haberleri/futbolculardan-sonra-kulup-baskanlarinin-da-rakip-takim-lehine-bahis-2060312\n2. BirGün — TFF Disciplinary Instruction: https://www.birgun.net/haber/tff-disiplin-talimati-ne-diyor-kume-dusme-puan-silme-ve-futboldan-men-cezalari-hangi-durumlarda-gecerli-674212\n   TFF (official): https://www.tff.org/Resources/TFF/Documents/TALIMATLAR/Futbol-Disiplin-Talimati.pdf","tr":"Sayın UEFA Disiplin Birimi,\n\nDeliller kamuoyunda, kurallar açık ve Galatasaray'a yönelik yerel tepki sessizlik. UEFA'yı görevini yapmaya çağırıyorum.\n\n17 Temmuz 2026'da İstanbul Cumhuriyet Başsavcılığı, lisanslı bahis operatörü kayıtları (2020–2026) ve MASAK mali suç analizine dayanarak 19 kulüp yöneticisine yasa dışı bahis ve şike suçlamalarıyla eş zamanlı operasyon başlattı.¹ Aralarında Galatasaray Başkan Vekili Maruf Güneş de var; kendi kulübü aleyhine ya da gol bahisleri şeklinde 48 kupon oynadığı iddia ediliyor.¹\n\nTürkiye'nin kendi futbol kuralları nettir: TFF Futbol Disiplin Talimatı'na göre bahis (Madde 57) üç aydan ömür boyu men'e kadar; şike (Madde 58) kişiler için ömür boyu men, kulüpler için puan silme ile küme düşme öngörür.² Ne var ki Galatasaray'a böyle bir tedbir uygulanmadı; kulüp UEFA organizasyonlarında yer almaya devam ediyor.\n\nBu kurallar Galatasaray'a karşı ülke içinde uygulanmıyorsa, Avrupa futbolunun bütünlüğünün koruyucusu olan UEFA kendi kurallarını uygulamalıdır. UEFA'yı kulüp hakkında resmi inceleme başlatmaya, dosyayı temin etmeye ve sonuç beklenirken geçici tedbir uygulamaya çağırıyorum.\n\nSaygılarımla,\n[Adınız]\n\nKaynaklar\n1. Karar: https://www.karar.com/spor-haberleri/futbolculardan-sonra-kulup-baskanlarinin-da-rakip-takim-lehine-bahis-2060312\n2. BirGün — TFF Disiplin Talimatı: https://www.birgun.net/haber/tff-disiplin-talimati-ne-diyor-kume-dusme-puan-silme-ve-futboldan-men-cezalari-hangi-durumlarda-gecerli-674212\n   TFF resmi: https://www.tff.org/Resources/TFF/Documents/TALIMATLAR/Futbol-Disiplin-Talimati.pdf"},{"label":"#4","subjEn":"Placeholder Subject #4 — Replace me","subjTr":"Yer Tutucu Konu #4 — Beni değiştir","en":"Dear UEFA, this is placeholder content #4 for testing the layout. Replace it with your own message.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.\n\nRespectfully,\n[Your name]","tr":"Sayın UEFA, bu tasarımı test etmek için #4 numaralı yer tutucu içeriktir. Lütfen kendi mesajınızla değiştirin.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nSaygılarımla,\n[Adınız]"},{"label":"#5","subjEn":"Placeholder Subject #5 — Replace me","subjTr":"Yer Tutucu Konu #5 — Beni değiştir","en":"Dear UEFA, this is placeholder content #5 for testing the layout. Replace it with your own message.\n\nCurabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit.\n\nRespectfully,\n[Your name]","tr":"Sayın UEFA, bu tasarımı test etmek için #5 numaralı yer tutucu içeriktir. Lütfen kendi mesajınızla değiştirin.\n\nCurabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra.\n\nSaygılarımla,\n[Adınız]"}]}</script>
+
+  <script>
+    (function () {
+      "use strict";
+      var DEFAULTS = { title: "", subtitle: "", recipients: [], variants: [] };
+      var $ = function (id) { return document.getElementById(id); };
+      var island = $("campaign-data");
+      var COUNT_KEY = "campaign_send_count";
+
+      var DATA = Object.assign({}, DEFAULTS);
+      try { var raw = (island.textContent || "").trim(); if (raw && raw !== "{}") DATA = Object.assign({}, DEFAULTS, JSON.parse(raw)); } catch (e) {}
+      if (!Array.isArray(DATA.recipients)) DATA.recipients = DATA.recipients ? [DATA.recipients] : [];
+      if (!Array.isArray(DATA.variants)) DATA.variants = [];
+      DATA.variants = DATA.variants.map(function (v) { return { label: v.label || "", subjEn: v.subjEn || "", subjTr: v.subjTr || "", en: v.en || "", tr: v.tr || "" }; });
+
+      var active = 0, lang = "en";
+
+      function getCount() { try { return parseInt(localStorage.getItem(COUNT_KEY) || "0", 10) || 0; } catch (e) { return 0; } }
+      function bump() { try { localStorage.setItem(COUNT_KEY, String(getCount() + 1)); } catch (e) {} renderCount(); }
+      function renderCount() {
+        var n = getCount(), el = $("counter");
+        if (n > 0) { el.hidden = false; el.textContent = n + " kez gönderildi"; }
+        else { el.hidden = true; el.textContent = ""; }
+      }
+
+      function render() {
+        document.title = DATA.title ? DATA.title + " · Kampanya" : "Kampanya · Mesajı Kopyala & Gönder";
+        renderRecipient();
+        if (active >= DATA.variants.length) active = Math.max(0, DATA.variants.length - 1);
+        renderTabs(); renderContent(); updateLangBtn(); renderCount();
+      }
+      function cur() { return (DATA.variants || [])[active] || null; }
+      function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+      function renderRecipient() {
+        var rs = DATA.recipients || [];
+        $("recipient").innerHTML = rs.map(function (r, i) { return (i ? '<span class="sep"> · </span>' : '') + '<span class="addr">' + esc(r) + '</span>'; }).join("");
+      }
+      function renderTabs() {
+        var t = $("tabs"); t.innerHTML = "";
+        var vs = DATA.variants || [];
+        if (vs.length < 2) { t.style.display = "none"; return; }
+        t.style.display = "flex";
+        vs.forEach(function (vv, i) {
+          var b = document.createElement("button");
+          b.className = "tab" + (i === active ? " active" : "");
+          b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", i === active ? "true" : "false");
+          b.textContent = vv.label || ("#" + (i + 1)); b.title = vv.label || ("#" + (i + 1));
+          b.addEventListener("click", function () { active = i; renderTabs(); renderContent(); });
+          t.appendChild(b);
+        });
+      }
+      function renderContent() {
+        var c = cur();
+        $("subject").textContent = c ? ((lang === "tr" ? c.subjTr : c.subjEn) || "") : "";
+        var b = $("body");
+        b.setAttribute("data-ph", lang === "tr" ? "Türkçe metin burada görünür…" : "English message will appear here…");
+        b.textContent = c ? ((lang === "tr" ? c.tr : c.en) || "") : "";
+        b.scrollTop = 0;
+      }
+      function updateLangBtn() { $("langToggle").textContent = (lang === "en") ? "🇹🇷 TR" : "🇬🇧 EN"; $("langToggle").classList.toggle("on", lang === "tr"); }
+      $("langToggle").addEventListener("click", function () { lang = (lang === "en") ? "tr" : "en"; updateLangBtn(); renderContent(); });
+
+      function bodyEN() { var c = cur(); return c ? (c.en || "").replace(/\r/g, "").trim() : ""; }
+      function subjEN() { var c = cur(); return c ? (c.subjEn || "").trim() : ""; }
+
+      function copyText(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).catch(fb.bind(null, text));
+        return Promise.resolve(fb(text));
+      }
+      function fb(text) { var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand("copy"); } catch (_) {} document.body.removeChild(ta); }
+      function flash(btn) { btn.classList.add("done"); clearTimeout(btn._t); btn._t = setTimeout(function () { btn.classList.remove("done"); }, 1500); }
+
+      $("copyBody").addEventListener("click", function (e) { var t = bodyEN(); if (!t) { toast("Önce İngilizce metni gir."); return; } copyText(t); flash(e.currentTarget); bump(); toast("✓ Mesaj başarıyla kopyalandı"); });
+      $("copySubject").addEventListener("click", function (e) { var s = subjEN(); if (!s) { toast("Önce konu gir."); return; } copyText(s); flash(e.currentTarget); toast("✓ Konu başarıyla kopyalandı"); });
+      $("copyMail").addEventListener("click", function (e) { var a = (DATA.recipients || []).join(", "); if (!a) { toast("Önce adres gir."); return; } copyText(a); flash(e.currentTarget); toast("✓ Adresler başarıyla kopyalandı"); });
+
+      /* ---- editör ---- */
+      var editorOpen = false;
+      function makeRow(vv) {
+        vv = vv || { label: "", subjEn: "", subjTr: "", en: "", tr: "" };
+        var row = document.createElement("div"); row.className = "veditor";
+        var head = document.createElement("div"); head.className = "veditor-head";
+        var lab = document.createElement("input"); lab.className = "v-label"; lab.type = "text"; lab.placeholder = "#1"; lab.value = vv.label || "";
+        var rm = document.createElement("button"); rm.className = "v-remove"; rm.type = "button"; rm.title = "Sil"; rm.textContent = "✕";
+        head.appendChild(lab); head.appendChild(rm); row.appendChild(head);
+        row.appendChild(field("Konu — English", "v-subjEn", "input", "Subject…", vv.subjEn));
+        row.appendChild(field("Konu — Türkçe", "v-subjTr", "input", "Konu…", vv.subjTr));
+        row.appendChild(field("İçerik — English (gönderilecek)", "v-en", "textarea", "English message…", vv.en));
+        row.appendChild(field("İçerik — Türkçe (çeviri)", "v-tr", "textarea", "Türkçe metin…", vv.tr));
+        return row;
+      }
+      function field(labelText, cls, tag, ph, val) {
+        var f = document.createElement("div"); f.className = "field";
+        var l = document.createElement("label"); l.textContent = labelText; f.appendChild(l);
+        var el = document.createElement(tag); el.className = cls; el.placeholder = ph || ""; if (tag === "input") el.type = "text"; el.value = val || "";
+        f.appendChild(el); return f;
+      }
+      function fillEditor() {
+        $("inTitle").value = DATA.title || "";
+        $("inRecipients").value = (DATA.recipients || []).join(", ");
+        var list = $("variantList"); list.innerHTML = "";
+        var vs = (DATA.variants && DATA.variants.length) ? DATA.variants : [null];
+        vs.forEach(function (vv) { list.appendChild(makeRow(vv)); });
+      }
+      function readEditor() {
+        DATA.title = $("inTitle").value.trim();
+        DATA.recipients = $("inRecipients").value.split(/[,\n;]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+        var vs = [];
+        Array.prototype.forEach.call($("variantList").querySelectorAll(".veditor"), function (row) {
+          var o = { label: row.querySelector(".v-label").value.trim(), subjEn: row.querySelector(".v-subjEn").value.trim(), subjTr: row.querySelector(".v-subjTr").value.trim(), en: row.querySelector(".v-en").value, tr: row.querySelector(".v-tr").value };
+          if (o.label || o.subjEn || o.subjTr || o.en.trim() || o.tr.trim()) vs.push(o);
+        });
+        DATA.variants = vs; if (active >= vs.length) active = Math.max(0, vs.length - 1);
+      }
+      function liveUpdate() { readEditor(); render(); }
+      $("variantList").addEventListener("input", liveUpdate);
+      $("variantList").addEventListener("click", function (e) {
+        var rm = e.target.closest(".v-remove"); if (!rm) return;
+        var rows = $("variantList").querySelectorAll(".veditor");
+        if (rows.length <= 1) { rows[0].querySelectorAll("input,textarea").forEach(function (x) { x.value = ""; }); }
+        else { rm.closest(".veditor").remove(); }
+        liveUpdate();
+      });
+      $("addVariantBtn").addEventListener("click", function () { $("variantList").appendChild(makeRow()); liveUpdate(); });
+      ["inTitle", "inRecipients"].forEach(function (id) { $(id).addEventListener("input", liveUpdate); });
+
+      function openEditor() { fillEditor(); render(); $("editor").hidden = false; editorOpen = true; $("inRecipients").focus(); }
+      function closeEditor() {
+        $("editor").hidden = true; editorOpen = false;
+        if (location.hash) { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; } }
+      }
+      // Editör görünür bir buton değil; sahibi için gizli: index.html#edit ile açılır.
+      function maybeOpenFromHash() { if ((location.hash || "").toLowerCase() === "#edit") openEditor(); }
+      window.addEventListener("hashchange", maybeOpenFromHash);
+      $("closeEditor").addEventListener("click", closeEditor);
+      $("saveBtn").addEventListener("click", function () { readEditor(); writeIsland(); render(); closeEditor(); toast("Kaydedildi ✓  Yayın için “Dosyayı indir”."); });
+      $("downloadBtn").addEventListener("click", function () { readEditor(); lang = "en"; active = 0; writeIsland(); render(); closeEditor(); download(); });
+
+      function writeIsland() { island.textContent = JSON.stringify(DATA).replace(/</g, "\\u003c"); }
+      function download() {
+        writeIsland();
+        var html = "<!doctype html>\n" + document.documentElement.outerHTML;
+        var blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        var url = URL.createObjectURL(blob), a = document.createElement("a");
+        a.href = url; a.download = "index.html"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+        toast("index.html indirildi — public'te yayınla.");
+      }
+
+      var tt; function toast(m) { var t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(function () { t.classList.remove("show"); }, 2300); }
+
+      render();
+      maybeOpenFromHash();
+    })();
+  </script>
+</body>
+</html>
