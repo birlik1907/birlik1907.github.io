@@ -104,7 +104,8 @@
     }
     .body::-webkit-scrollbar { width: 9px; }
     .body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; border: 2px solid var(--card); }
-    .counter { flex: none; margin: 8px 0 0; font-size: 0.7rem; color: var(--muted); }
+    .counter { flex: none; text-align: center; margin: 5px 0 0; font-size: 0.72rem; color: var(--muted); }
+    .counter b { color: var(--text); font-weight: 700; }
     .counter[hidden] { display: none; }
 
     .foot { flex: none; text-align: center; color: var(--faint); font-size: 0.69rem; line-height: 1.4; margin: 0; }
@@ -183,10 +184,10 @@
         </button>
       </div>
       <div class="body" id="body" data-ph="Mesaj metni burada görünür…"></div>
-      <p class="counter" id="counter" hidden></p>
     </section>
 
     <p class="foot" id="foot">🔒 Çerez yok · izleme yok · veri toplanmaz<br>Mesajı kopyala, kendi e-postandan gönder.</p>
+    <p class="counter" id="counter" hidden></p>
   </div>
 
   <!-- ==================== EDİTÖR ==================== -->
@@ -245,11 +246,19 @@
 
       var active = 0, lang = "en";
 
+      var LAST_KEY = "campaign_last_copy", COOLDOWN = 90000; // 90 sn: aynı gönderimin konu+içerik+kime kopyaları tek sayılır
       function getCount() { try { return parseInt(localStorage.getItem(COUNT_KEY) || "0", 10) || 0; } catch (e) { return 0; } }
-      function bump() { try { localStorage.setItem(COUNT_KEY, String(getCount() + 1)); } catch (e) {} renderCount(); }
+      function getLast() { try { return parseInt(localStorage.getItem(LAST_KEY) || "0", 10) || 0; } catch (e) { return 0; } }
+      function bump() {
+        var now = Date.now();
+        if (now - getLast() > COOLDOWN) {
+          try { localStorage.setItem(COUNT_KEY, String(getCount() + 1)); localStorage.setItem(LAST_KEY, String(now)); } catch (e) {}
+        }
+        renderCount();
+      }
       function renderCount() {
         var n = getCount(), el = $("counter");
-        if (n > 0) { el.hidden = false; el.textContent = n + " kez gönderildi"; }
+        if (n > 0) { el.hidden = false; el.innerHTML = 'Bu mesaj <b>' + n + '</b> defa kopyalandı'; }
         else { el.hidden = true; el.textContent = ""; }
       }
 
@@ -301,8 +310,8 @@
       function flash(btn) { btn.classList.add("done"); clearTimeout(btn._t); btn._t = setTimeout(function () { btn.classList.remove("done"); }, 1500); }
 
       $("copyBody").addEventListener("click", function (e) { var t = bodyEN(); if (!t) { toast("Önce İngilizce metni gir."); return; } copyText(t); flash(e.currentTarget); bump(); toast("✓ Mesaj başarıyla kopyalandı"); });
-      $("copySubject").addEventListener("click", function (e) { var s = subjEN(); if (!s) { toast("Önce konu gir."); return; } copyText(s); flash(e.currentTarget); toast("✓ Konu başarıyla kopyalandı"); });
-      $("copyMail").addEventListener("click", function (e) { var a = (DATA.recipients || []).join(", "); if (!a) { toast("Önce adres gir."); return; } copyText(a); flash(e.currentTarget); toast("✓ Adresler başarıyla kopyalandı"); });
+      $("copySubject").addEventListener("click", function (e) { var s = subjEN(); if (!s) { toast("Önce konu gir."); return; } copyText(s); flash(e.currentTarget); bump(); toast("✓ Konu başarıyla kopyalandı"); });
+      $("copyMail").addEventListener("click", function (e) { var a = (DATA.recipients || []).join(", "); if (!a) { toast("Önce adres gir."); return; } copyText(a); flash(e.currentTarget); bump(); toast("✓ Adresler başarıyla kopyalandı"); });
 
       /* ---- editör ---- */
       var editorOpen = false;
