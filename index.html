@@ -153,7 +153,7 @@
     <!-- KİME (en üstte) -->
     <section class="card">
       <div class="card-head">
-        <span class="lbl">Kime <em>(Mail To)</em></span>
+        <span class="lbl">Kime <em lang="en">(MAIL TO)</em></span>
         <button class="mini" id="copyMail" type="button" aria-label="Adresleri kopyala" title="3 adresi birden kopyala">
           <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           <svg class="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -165,7 +165,7 @@
     <!-- KONU -->
     <section class="card">
       <div class="card-head">
-        <span class="lbl">Konu <em>(Subject)</em></span>
+        <span class="lbl">Konu <em lang="en">(SUBJECT)</em></span>
         <button class="mini" id="copySubject" type="button" aria-label="Konuyu kopyala" title="Konuyu kopyala">
           <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           <svg class="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -177,7 +177,7 @@
     <!-- İÇERİK -->
     <section class="card card-grow">
       <div class="card-head">
-        <span class="lbl">İçerik <em>(Mail Body)</em></span>
+        <span class="lbl">İçerik <em lang="en">(MAIL BODY)</em></span>
         <button class="mini" id="copyBody" type="button" aria-label="Metni kopyala" title="Metni kopyala">
           <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           <svg class="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -322,9 +322,9 @@
         var lab = document.createElement("input"); lab.className = "v-label"; lab.type = "text"; lab.placeholder = "#1"; lab.value = vv.label || "";
         var rm = document.createElement("button"); rm.className = "v-remove"; rm.type = "button"; rm.title = "Sil"; rm.textContent = "✕";
         head.appendChild(lab); head.appendChild(rm); row.appendChild(head);
-        row.appendChild(field("Konu — English", "v-subjEn", "input", "Subject…", vv.subjEn));
+        row.appendChild(field("Konu — İngilizce", "v-subjEn", "input", "Subject…", vv.subjEn));
         row.appendChild(field("Konu — Türkçe", "v-subjTr", "input", "Konu…", vv.subjTr));
-        row.appendChild(field("İçerik — English (gönderilecek)", "v-en", "textarea", "English message…", vv.en));
+        row.appendChild(field("İçerik — İngilizce (gönderilecek)", "v-en", "textarea", "English message…", vv.en));
         row.appendChild(field("İçerik — Türkçe (çeviri)", "v-tr", "textarea", "Türkçe metin…", vv.tr));
         return row;
       }
